@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from db import DataBase
 
 
@@ -30,7 +31,7 @@ class BookManager:
         self.bUpdateBook = tk.Button(self.hframe, text='Update', command=self.update_book)
         self.bSearchBook = tk.Button(self.hframe, text='Search', command=self.search_book)
 
-        self.hframe.pack()
+        self.hframe.pack(pady=(0, 10))
         self.lName.grid(row=0, column=0, pady=20, padx=10)
         self.eName.grid(row=0, column=1)
         self.lAuthor.grid(row=0, column=2, padx=10)
@@ -43,24 +44,24 @@ class BookManager:
 
         # body
         self.bframe = tk.Frame(self.root)
-        self.book_list = tk.Listbox(self.bframe)
-        self.scrollbar = tk.Scrollbar(self.bframe)
-
-        self.bframe.pack(fill='both', expand=True)
-        self.scrollbar.pack(side='right', fill='y')
-        self.book_list.pack(side='left', fill='both', expand=True)
-              
-        # set scrollbar
-        self.book_list.configure(yscrollcommand=self.scrollbar.set)
-        self.scrollbar.configure(command=self.book_list.yview)
         
-        # bind select
-        self.book_list.bind('<<ListboxSelect>>', self.select_item)
+        self.book_trv = ttk.Treeview(self.bframe, columns=('ID', 'Name', 'Author'), show='headings', height='20')
+        self.book_trv.column('ID', anchor=tk.CENTER)
+
+        self.book_trv.heading('ID', text='Book ID')
+        self.book_trv.heading('Name', text='Name')
+        self.book_trv.heading('Author', text='Author')
+
+        self.bframe.pack()
+        self.book_trv.pack()
+
+        self.book_trv.bind('<ButtonRelease-1>', self.select_item)
+        
 
     def populate_list(self):
-        self.book_list.delete(0, tk.END)
+        self.book_trv.delete(*self.book_trv.get_children())
         for row in db.fetch():
-            self.book_list.insert(tk.END, row)
+            self.book_trv.insert('', 'end', values=row)
 
 
     def add_book(self):
@@ -76,7 +77,8 @@ class BookManager:
     def select_item(self, event):
         try:
             # get selected item
-            self.selected_item = self.book_list.get(tk.ANCHOR)
+            item = self.book_trv.item(self.book_trv.focus())
+            self.selected_item = item['values']
             # set entries
             self.name.set(self.selected_item[1])
             self.author.set(self.selected_item[2])
